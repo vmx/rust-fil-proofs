@@ -5,10 +5,10 @@ use std::sync::mpsc::{self, Receiver, Sender, TryRecvError};
 use std::thread;
 use std::time::{Duration, Instant};
 
-use bellperson::gpu;
+use bellperson::gpu::PriorityLock;
 use clap::{arg_enum, value_t, App, Arg};
 use filecoin_proofs::{Candidate, PrivateReplicaInfo};
-use log::{debug, info, trace};
+use log::{debug, info};
 use storage_proofs::sector::SectorId;
 
 mod election_post;
@@ -60,17 +60,12 @@ fn thread_fun(
     while iteration < std::u8::MAX {
         info!("high iter {}", iteration);
 
+        let mut prio_lock = PriorityLock::new();
         // This is the higher priority proof, get it on the GPU even if there is one running
         // already there
         if gpu_stealing {
-            let gpu_lock = gpu::acquire_gpu().unwrap();
             info!("Trying to acquire GPU lock");
-            while !gpu::gpu_is_available().unwrap_or(false) {
-                thread::sleep(Duration::from_millis(100));
-                trace!("Trying to acquire GPU lock");
-            }
-            debug!("Acquired GPU lock, dropping it again");
-            gpu::drop_acquire_lock(gpu_lock);
+            prio_lock.lock();
         }
 
         // Run the actual proof
