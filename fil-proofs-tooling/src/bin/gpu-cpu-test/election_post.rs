@@ -1,8 +1,11 @@
 use std::collections::BTreeMap;
 use std::io::{Seek, SeekFrom, Write};
 use std::path::Path;
+use std::sync::atomic::Ordering;
 
-use filecoin_proofs::constants::{DEFAULT_POREP_PROOF_PARTITIONS, SECTOR_SIZE_16_MIB};
+use filecoin_proofs::constants::{
+    DEFAULT_POREP_PROOF_PARTITIONS, POST_CHALLENGED_NODES, POST_CHALLENGE_COUNT, SECTOR_SIZE_16_MIB,
+};
 use filecoin_proofs::types::{
     PaddedBytesAmount, PieceInfo, PoRepConfig, PoRepProofPartitions, PoStConfig,
     SealPreCommitOutput, SectorSize, UnpaddedBytesAmount,
@@ -18,18 +21,15 @@ use tempfile::NamedTempFile;
 const CHALLENGE_SEED: [u8; 32] = [0; 32];
 const PROVER_ID: [u8; 32] = [0; 32];
 const SECTOR_ID: u64 = 0;
-const N_PARTITIONS: PoRepProofPartitions = DEFAULT_POREP_PROOF_PARTITIONS;
 const SECTOR_SIZE: u64 = SECTOR_SIZE_16_MIB;
 //const SECTOR_SIZE: u64 = SECTOR_SIZE_ONE_KIB;
-const POREP_CONFIG: PoRepConfig = PoRepConfig {
-    sector_size: SectorSize(SECTOR_SIZE),
-    partitions: N_PARTITIONS,
-};
 const SEED: [u8; 32] = [0; 32];
 const TICKET: [u8; 32] = [0; 32];
 const CHALLENGE_COUNT: u64 = 1;
 const POST_CONFIG: PoStConfig = PoStConfig {
     sector_size: SectorSize(SECTOR_SIZE),
+    challenge_count: POST_CHALLENGE_COUNT,
+    challenged_nodes: POST_CHALLENGED_NODES,
 };
 
 fn generate_piece_infos(mut staged_file: &NamedTempFile) -> Vec<PieceInfo> {
@@ -79,8 +79,12 @@ pub fn generate_seal_fixture(cache_dir_path: &Path) -> (SealPreCommitOutput, Vec
 
     let piece_infos = generate_piece_infos(&staged_file);
 
+    let porep_config = PoRepConfig {
+        sector_size: SectorSize(SECTOR_SIZE),
+        partitions: PoRepProofPartitions(DEFAULT_POREP_PROOF_PARTITIONS.load(Ordering::Relaxed)),
+    };
     let seal_pre_commit_output = seal_pre_commit(
-        POREP_CONFIG,
+        porep_config,
         cache_dir_path,
         staged_file.path(),
         sealed_file.path(),
@@ -99,8 +103,12 @@ pub fn do_generate_seal(
     seal_pre_commit_output: SealPreCommitOutput,
     piece_infos: &[PieceInfo],
 ) {
+    let porep_config = PoRepConfig {
+        sector_size: SectorSize(SECTOR_SIZE),
+        partitions: PoRepProofPartitions(DEFAULT_POREP_PROOF_PARTITIONS.load(Ordering::Relaxed)),
+    };
     seal_commit(
-        POREP_CONFIG,
+        porep_config,
         cache_dir_path,
         PROVER_ID,
         SectorId::from(SECTOR_ID),
