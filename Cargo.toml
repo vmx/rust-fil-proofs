@@ -6,5 +6,5 @@ members = [
   "fil-proofs-tooling",
 ]
 
-[patch.crates-io]
-bellperson = { git = "https://github.com/finalitylabs/bellman", branch="fil-lock" }
+#[patch.crates-io]
+#bellperson = { git = "https://github.com/finalitylabs/bellman", branch="fil-lock" }
