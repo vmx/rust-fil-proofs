@@ -60,16 +60,21 @@ fn thread_fun(
     while iteration < std::u8::MAX {
         info!("high iter {}", iteration);
 
-        let mut prio_lock = PriorityLock::new();
         // This is the higher priority proof, get it on the GPU even if there is one running
         // already there
         if gpu_stealing {
+            let mut prio_lock = PriorityLock::new();
             info!("Trying to acquire GPU lock");
             prio_lock.lock();
-        }
 
-        // Run the actual proof
-        election_post::do_generate_post(&priv_replica_infos, &candidates);
+            // Run the actual proof
+            election_post::do_generate_post(&priv_replica_infos, &candidates);
+        }
+        // No locking
+        else {
+            // Run the actual proof
+            election_post::do_generate_post(&priv_replica_infos, &candidates);
+        }
 
         // Waiting for this thread to be killed
         match rx.try_recv() {
