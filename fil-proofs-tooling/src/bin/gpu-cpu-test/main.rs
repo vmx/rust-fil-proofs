@@ -58,13 +58,13 @@ fn thread_fun(
     let timing = Instant::now();
     let mut iteration = 0;
     while iteration < std::u8::MAX {
-        info!("high iter {}", iteration);
+        info!("iter {}", iteration);
 
         // This is the higher priority proof, get it on the GPU even if there is one running
         // already there
         if gpu_stealing {
             let mut prio_lock = PriorityLock::new();
-            info!("Trying to acquire GPU lock");
+            info!("Trying to acquire Priority lock");
             prio_lock.lock();
 
             // Run the actual proof
@@ -73,6 +73,7 @@ fn thread_fun(
         // No locking
         else {
             // Run the actual proof
+            debug!("Do not try to acquire the priority lock");
             election_post::do_generate_post(&priv_replica_infos, &candidates);
         }
 
