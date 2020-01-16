@@ -63,9 +63,8 @@ fn thread_fun(
         // This is the higher priority proof, get it on the GPU even if there is one running
         // already there
         if gpu_stealing {
-            let mut prio_lock = PriorityLock::new();
             info!("Trying to acquire Priority lock");
-            prio_lock.lock();
+            let _prio_lock = PriorityLock::lock();
 
             // Run the actual proof
             election_post::do_generate_post(&priv_replica_infos, &candidates);

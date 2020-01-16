@@ -7,4 +7,4 @@ members = [
 ]
 
 [patch.crates-io]
-bellperson = { git = "https://github.com/vmx/bellman", branch="fil-lock" }
+bellperson = { git = "https://github.com/vmx/bellman", branch="prio-lock" }
