@@ -1,5 +1,3 @@
-use rayon::prelude::*;
-
 use anyhow::{ensure, Context};
 use bellperson::{groth16, Circuit};
 use fil_sapling_crypto::jubjub::JubjubEngine;
@@ -11,7 +9,6 @@ use crate::error::Result;
 use crate::parameter_cache::{CacheableParameters, ParameterSetMetadata};
 use crate::partitions;
 use crate::proof::ProofScheme;
-use crate::settings;
 
 #[derive(Clone)]
 pub struct SetupParams<'a, S: ProofScheme<'a>> {
@@ -90,16 +87,9 @@ where
             S::verify_all_partitions(&pub_params.vanilla_params, &pub_in, &vanilla_proofs)?;
         ensure!(sanity_check, "sanity check failed");
 
-        // Use a custom pool for this, so we can control the number of threads being used.
-        let pool = rayon::ThreadPoolBuilder::new()
-            .num_threads(settings::SETTINGS.lock().unwrap().num_proving_threads)
-            .build()
-            .context("failed to build thread pool")?;
-
         info!("snark_proof:start");
-        let groth_proofs: Result<Vec<_>> = pool.install(|| {
-            vanilla_proofs
-                .par_iter()
+        let groth_proofs: Result<Vec<_>> = vanilla_proofs
+                .iter()
                 .map(|vanilla_proof| {
                     Self::circuit_proof(
                         pub_in,
@@ -108,8 +98,7 @@ where
                         groth_params,
                     )
                 })
-                .collect()
-        });
+                .collect();
         info!("snark_proof:finish");
 
         Ok(MultiProof::new(groth_proofs?, &groth_params.vk))
