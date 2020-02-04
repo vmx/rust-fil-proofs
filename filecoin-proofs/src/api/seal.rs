@@ -92,6 +92,7 @@ where
             usize::from(PoRepProofPartitions::from(porep_config)),
         )?,
         partitions: Some(usize::from(PoRepProofPartitions::from(porep_config))),
+        priority: false,
     };
 
     let compound_public_params =
@@ -204,6 +205,7 @@ where
             usize::from(PoRepProofPartitions::from(porep_config)),
         )?,
         partitions: Some(usize::from(PoRepProofPartitions::from(porep_config))),
+        priority: false,
     };
 
     let compound_public_params =
@@ -326,6 +328,7 @@ pub fn seal_commit_phase1<T: AsRef<Path>>(
             usize::from(PoRepProofPartitions::from(porep_config)),
         )?,
         partitions: Some(usize::from(PoRepProofPartitions::from(porep_config))),
+        priority: false,
     };
 
     let compound_public_params =
@@ -411,6 +414,7 @@ pub fn seal_commit_phase2(
             usize::from(PoRepProofPartitions::from(porep_config)),
         )?,
         partitions: Some(usize::from(PoRepProofPartitions::from(porep_config))),
+        priority: false,
     };
 
     let compound_public_params =
@@ -426,6 +430,7 @@ pub fn seal_commit_phase2(
         vanilla_proofs,
         &compound_public_params.vanilla_params,
         &groth_params,
+        compound_public_params.priority,
     )?;
     info!("snark_proof:finish");
 
@@ -505,6 +510,7 @@ pub fn verify_seal(
             usize::from(PoRepProofPartitions::from(porep_config)),
         )?,
         partitions: Some(usize::from(PoRepProofPartitions::from(porep_config))),
+        priority: false,
     };
 
     let compound_public_params: compound_proof::PublicParams<
@@ -610,6 +616,7 @@ pub fn verify_batch_seal(
             usize::from(PoRepProofPartitions::from(porep_config)),
         )?,
         partitions: Some(usize::from(PoRepProofPartitions::from(porep_config))),
+        priority: false,
     };
 
     let compound_public_params: compound_proof::PublicParams<
